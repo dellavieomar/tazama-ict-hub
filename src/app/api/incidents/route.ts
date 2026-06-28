@@ -10,14 +10,14 @@ export async function GET() {
   await ensureProfile(userId);
 
   const { data, error } = await supabaseAdmin
-    .from("activities")
+    .from("incidents")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(50);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ activities: data });
+  return NextResponse.json({ incidents: data });
 }
 
 export async function POST(req: Request) {
@@ -27,25 +27,23 @@ export async function POST(req: Request) {
   await ensureProfile(userId);
 
   const body = await req.json();
-  const { type, title, description, priority, status } = body;
+  const { title, description, severity, status, affected_systems } = body;
 
-  if (!type || !title) {
-    return NextResponse.json({ error: "Type and title are required" }, { status: 400 });
-  }
+  if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });
 
   const { data, error } = await supabaseAdmin
-    .from("activities")
+    .from("incidents")
     .insert({
       user_id: userId,
-      type,
       title,
       description: description ?? null,
-      priority: priority ?? "medium",
+      severity: severity ?? "medium",
       status: status ?? "open",
+      affected_systems: affected_systems ?? null,
     })
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ activity: data }, { status: 201 });
+  return NextResponse.json({ incident: data }, { status: 201 });
 }

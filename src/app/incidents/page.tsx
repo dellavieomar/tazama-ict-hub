@@ -4,50 +4,45 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-type Activity = {
+type Incident = {
   id: number;
-  type: string;
   title: string;
   description: string | null;
+  severity: string;
   status: string;
-  priority: string;
+  affected_systems: string | null;
   created_at: string;
 };
 
-const TYPE_OPTIONS = [
-  "daily_log", "incident", "support_task", "network_activity",
-  "security_event", "backup_activity", "maintenance", "project",
-];
-
-export default function ActivitiesPage() {
-  const [activities, setActivities] = useState<Activity[]>([]);
+export default function IncidentsPage() {
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editDraft, setEditDraft] = useState<Partial<Activity>>({});
+  const [editDraft, setEditDraft] = useState<Partial<Incident>>({});
 
-  const [type, setType] = useState("daily_log");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("medium");
+  const [severity, setSeverity] = useState("medium");
+  const [affectedSystems, setAffectedSystems] = useState("");
 
-  async function loadActivities() {
+  async function loadIncidents() {
     setLoading(true);
     try {
-      const res = await fetch("/api/activities");
+      const res = await fetch("/api/incidents");
       const json = await res.json();
-      if (res.ok) setActivities(json.activities ?? []);
-      else setError(json.error ?? "Failed to load activities");
+      if (res.ok) setIncidents(json.incidents ?? []);
+      else setError(json.error ?? "Failed to load incidents");
     } catch {
-      setError("Failed to load activities");
+      setError("Failed to load incidents");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadActivities();
+    loadIncidents();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -56,54 +51,61 @@ export default function ActivitiesPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/activities", {
+      const res = await fetch("/api/incidents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, title, description, priority }),
+        body: JSON.stringify({ title, description, severity, affected_systems: affectedSystems }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Failed to save activity");
+      if (!res.ok) throw new Error(json.error ?? "Failed to save incident");
       setTitle("");
       setDescription("");
-      await loadActivities();
+      setAffectedSystems("");
+      await loadIncidents();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save activity");
+      setError(err instanceof Error ? err.message : "Failed to save incident");
     } finally {
       setSubmitting(false);
     }
   }
 
-  function startEdit(a: Activity) {
-    setEditingId(a.id);
-    setEditDraft({ title: a.title, description: a.description, priority: a.priority, status: a.status });
+  function startEdit(inc: Incident) {
+    setEditingId(inc.id);
+    setEditDraft({
+      title: inc.title,
+      description: inc.description,
+      severity: inc.severity,
+      status: inc.status,
+      affected_systems: inc.affected_systems,
+    });
   }
 
   async function saveEdit(id: number) {
-    const res = await fetch(`/api/activities/${id}`, {
+    const res = await fetch(`/api/incidents/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(editDraft),
     });
     if (res.ok) {
       setEditingId(null);
-      await loadActivities();
+      await loadIncidents();
     } else {
       const json = await res.json();
-      setError(json.error ?? "Failed to update activity");
+      setError(json.error ?? "Failed to update incident");
     }
   }
 
-  async function deleteActivity(id: number) {
-    if (!confirm("Delete this activity? This can't be undone.")) return;
-    const res = await fetch(`/api/activities/${id}`, { method: "DELETE" });
-    if (res.ok) await loadActivities();
-    else setError("Failed to delete activity");
+  async function deleteIncident(id: number) {
+    if (!confirm("Delete this incident? This can't be undone.")) return;
+    const res = await fetch(`/api/incidents/${id}`, { method: "DELETE" });
+    if (res.ok) await loadIncidents();
+    else setError("Failed to delete incident");
   }
 
   return (
     <main className="dash-page">
       <div className="mesh-bg" aria-hidden="true">
-        <div className="blob blob-teal" />
+        <div className="blob blob-amber" />
         <div className="blob blob-deep" />
       </div>
 
@@ -112,25 +114,18 @@ export default function ActivitiesPage() {
           <Link href="/dashboard" className="back-link">
             <ArrowLeft size={14} /> Dashboard
           </Link>
-          <h1 className="dash-title">Log an activity</h1>
+          <h1 className="dash-title">Report an incident</h1>
         </div>
       </header>
 
       <section className="activity-layout">
         <form className="activity-form" onSubmit={handleSubmit}>
-          <label className="form-label">Type</label>
-          <select className="form-input" value={type} onChange={(e) => setType(e.target.value)}>
-            {TYPE_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt.replace(/_/g, " ")}</option>
-            ))}
-          </select>
-
           <label className="form-label">Title</label>
           <input
             className="form-input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Restarted core switch after outage"
+            placeholder="e.g. Core switch went down at 14:20"
             required
           />
 
@@ -139,34 +134,42 @@ export default function ActivitiesPage() {
             className="form-input form-textarea"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What happened, what you did, any follow-up needed…"
+            placeholder="What happened, impact, what's been done so far…"
             rows={4}
           />
 
-          <label className="form-label">Priority</label>
-          <select className="form-input" value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <label className="form-label">Severity</label>
+          <select className="form-input" value={severity} onChange={(e) => setSeverity(e.target.value)}>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
             <option value="critical">Critical</option>
           </select>
 
+          <label className="form-label">Affected systems</label>
+          <input
+            className="form-input"
+            value={affectedSystems}
+            onChange={(e) => setAffectedSystems(e.target.value)}
+            placeholder="e.g. Core switch, Dynamics NAV"
+          />
+
           {error && <p className="form-error">{error}</p>}
 
           <button className="btn-primary" type="submit" disabled={submitting}>
-            {submitting ? "Saving…" : "Save activity"}
+            {submitting ? "Saving…" : "Save incident"}
           </button>
         </form>
 
         <div className="activity-list">
-          <p className="eyebrow">RECENT ACTIVITY</p>
+          <p className="eyebrow">OPEN &amp; RECENT INCIDENTS</p>
           {loading && <p className="muted-text">Loading…</p>}
-          {!loading && activities.length === 0 && (
-            <p className="muted-text">No activities logged yet — add your first one.</p>
+          {!loading && incidents.length === 0 && (
+            <p className="muted-text">No incidents reported — hopefully it stays that way.</p>
           )}
-          {activities.map((a) =>
-            editingId === a.id ? (
-              <div key={a.id} className="activity-row edit-form">
+          {incidents.map((inc) =>
+            editingId === inc.id ? (
+              <div key={inc.id} className="incident-row edit-form">
                 <input
                   className="form-input"
                   value={editDraft.title ?? ""}
@@ -180,8 +183,8 @@ export default function ActivitiesPage() {
                 />
                 <select
                   className="form-input"
-                  value={editDraft.priority ?? "medium"}
-                  onChange={(e) => setEditDraft({ ...editDraft, priority: e.target.value })}
+                  value={editDraft.severity ?? "medium"}
+                  onChange={(e) => setEditDraft({ ...editDraft, severity: e.target.value })}
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -195,26 +198,35 @@ export default function ActivitiesPage() {
                 >
                   <option value="open">Open</option>
                   <option value="in_progress">In progress</option>
-                  <option value="completed">Completed</option>
+                  <option value="completed">Resolved</option>
                   <option value="on_hold">On hold</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
+                <input
+                  className="form-input"
+                  value={editDraft.affected_systems ?? ""}
+                  onChange={(e) => setEditDraft({ ...editDraft, affected_systems: e.target.value })}
+                  placeholder="Affected systems"
+                />
                 <div className="edit-actions">
-                  <button className="btn-small" onClick={() => saveEdit(a.id)}>Save</button>
+                  <button className="btn-small" onClick={() => saveEdit(inc.id)}>Save</button>
                   <button className="btn-small" onClick={() => setEditingId(null)}>Cancel</button>
                 </div>
               </div>
             ) : (
-              <div key={a.id} className="activity-row">
-                <span className="activity-type">{a.type.replace(/_/g, " ")}</span>
-                <h4>{a.title}</h4>
-                {a.description && <p>{a.description}</p>}
+              <div key={inc.id} className="incident-row">
+                <span className={`severity-tag severity-${inc.severity}`}>{inc.severity}</span>
+                <h4>{inc.title}</h4>
+                {inc.description && <p>{inc.description}</p>}
+                {inc.affected_systems && (
+                  <p className="activity-meta">Affected: {inc.affected_systems}</p>
+                )}
                 <span className="activity-meta">
-                  {a.priority} · {a.status} · {new Date(a.created_at).toLocaleString()}
+                  {inc.status} · {new Date(inc.created_at).toLocaleString()}
                 </span>
                 <div className="row-actions">
-                  <button className="btn-small" onClick={() => startEdit(a)}>Edit</button>
-                  <button className="btn-small btn-danger" onClick={() => deleteActivity(a.id)}>Delete</button>
+                  <button className="btn-small" onClick={() => startEdit(inc)}>Edit</button>
+                  <button className="btn-small btn-danger" onClick={() => deleteIncident(inc.id)}>Delete</button>
                 </div>
               </div>
             )

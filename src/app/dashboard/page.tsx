@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const { signOut } = useAuth();
   const { user } = useUser();
   const [weeklyCount, setWeeklyCount] = useState(0);
+  const [openIncidents, setOpenIncidents] = useState(0);
 
   useEffect(() => {
     fetch("/api/activities")
@@ -38,10 +39,20 @@ export default function DashboardPage() {
         setWeeklyCount(recent.length);
       })
       .catch(() => {});
+
+    fetch("/api/incidents")
+      .then((r) => r.json())
+      .then((json) => {
+        const open = (json.incidents ?? []).filter(
+          (i: { status: string }) => i.status === "open" || i.status === "in_progress"
+        );
+        setOpenIncidents(open.length);
+      })
+      .catch(() => {});
   }, []);
 
   const activitiesCount = useCountUp(weeklyCount);
-  const incidentsCount = useCountUp(0);
+  const incidentsCount = useCountUp(openIncidents);
   const alertsCount = useCountUp(0);
 
   return (

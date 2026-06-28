@@ -607,3 +607,47 @@ body {
 .auth-amber .cl-footerActionLink {
   color: #ff6b35 !important;
 }
+
+/* === Edit/delete actions + severity tags === */
+.row-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn-small {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: var(--font-body), sans-serif;
+}
+.btn-small:hover { background: rgba(255, 255, 255, 0.1); }
+.btn-danger { border-color: rgba(255, 107, 107, 0.35); color: #ff8080; }
+.btn-danger:hover { background: rgba(255, 107, 107, 0.12); }
+
+.edit-form { display: flex; flex-direction: column; gap: 8px; }
+.edit-actions { display: flex; gap: 8px; margin-top: 6px; }
+
+.severity-tag {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 5px;
+  display: inline-block;
+}
+.severity-low { background: rgba(0, 212, 184, 0.12); color: var(--teal); }
+.severity-medium { background: rgba(255, 107, 53, 0.12); color: var(--amber); }
+.severity-high { background: rgba(255, 159, 10, 0.15); color: #ff9f0a; }
+.severity-critical { background: rgba(255, 69, 58, 0.15); color: #ff453a; }
+
+.incident-row {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 3px solid var(--amber);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.incident-row h4 { margin: 8px 0 4px; font-family: var(--font-display), sans-serif; }
+.incident-row p { font-size: 13.5px; color: var(--muted); margin: 0 0 6px; }
