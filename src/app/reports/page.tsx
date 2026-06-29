@@ -78,9 +78,17 @@ export default function ReportsPage() {
           </Link>
           <h1 className="dash-title">Reports</h1>
         </div>
-        <button className="btn-primary" onClick={generateReport} disabled={generating} style={{ border: "none", cursor: "pointer" }}>
-          {generating ? "Generating…" : "Generate this week's report"}
-        </button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          {active && (
+            <>
+              <a className="btn-small" href={`/api/reports/${active.id}/pdf`}>Download PDF</a>
+              <a className="btn-small" href={`/api/reports/${active.id}/docx`}>Download Word</a>
+            </>
+          )}
+          <button className="btn-primary" onClick={generateReport} disabled={generating} style={{ border: "none", cursor: "pointer" }}>
+            {generating ? "Generating…" : "Generate this week's report"}
+          </button>
+        </div>
       </header>
 
       {error && <p className="form-error">{error}</p>}
