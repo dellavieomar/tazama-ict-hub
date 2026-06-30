@@ -4,6 +4,10 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { LogOut, ClipboardList, AlertTriangle, FileBarChart, UserCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area,
+} from "recharts";
 
 function useCountUp(target: number, duration = 900) {
   const [value, setValue] = useState(0);
@@ -22,11 +26,27 @@ function useCountUp(target: number, duration = 900) {
   return value;
 }
 
+type Analytics = {
+  activitiesByType: { type: string; count: number }[];
+  incidentsBySeverity: { severity: string; count: number }[];
+  dailyActivity: { date: string; count: number }[];
+  securityAlertsThisWeek: number;
+  backupStatus: string;
+};
+
+const SEVERITY_COLORS: Record<string, string> = {
+  low: "#00d4b8",
+  medium: "#ff6b35",
+  high: "#ff9f0a",
+  critical: "#ff453a",
+};
+
 export default function DashboardPage() {
   const { signOut } = useAuth();
   const { user } = useUser();
   const [weeklyCount, setWeeklyCount] = useState(0);
   const [openIncidents, setOpenIncidents] = useState(0);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
 
   useEffect(() => {
     fetch("/api/activities")
@@ -49,11 +69,17 @@ export default function DashboardPage() {
         setOpenIncidents(open.length);
       })
       .catch(() => {});
+
+    fetch("/api/analytics")
+      .then((r) => r.json())
+      .then(setAnalytics)
+      .catch(() => {});
   }, []);
 
   const activitiesCount = useCountUp(weeklyCount);
   const incidentsCount = useCountUp(openIncidents);
-  const alertsCount = useCountUp(0);
+  const alertsCount = useCountUp(analytics?.securityAlertsThisWeek ?? 0);
+  const backupStatus = analytics?.backupStatus ?? "…";
 
   return (
     <main className="dash-page">
@@ -83,13 +109,79 @@ export default function DashboardPage() {
         </div>
         <div className="stat-card">
           <span className="stat-value">{alertsCount}</span>
-          <span className="stat-label">Security alerts</span>
+          <span className="stat-label">Security alerts this week</span>
         </div>
-        <div className="stat-card stat-good">
-          <span className="stat-value">OK</span>
-          <span className="stat-label">Backup status</span>
+        <div className={`stat-card ${backupStatus === "OK" ? "stat-good" : ""}`}>
+          <span className="stat-value">{backupStatus}</span>
+          <span className="stat-label">Backup logged this week</span>
         </div>
       </section>
+
+      {analytics && (
+        <section className="chart-grid">
+          <div className="chart-card">
+            <p className="eyebrow">ACTIVITY TREND — LAST 14 DAYS</p>
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={analytics.dailyActivity}>
+                <defs>
+                  <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#00d4b8" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#00d4b8" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="date" stroke="#8b95a5" fontSize={11} />
+                <YAxis stroke="#8b95a5" fontSize={11} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ background: "#12161f", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }}
+                  labelStyle={{ color: "#f5f7fa" }}
+                />
+                <Area type="monotone" dataKey="count" stroke="#00d4b8" fill="url(#trendFill)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="chart-card">
+            <p className="eyebrow">ACTIVITIES BY TYPE</p>
+            {analytics.activitiesByType.length === 0 ? (
+              <p className="muted-text">No activities logged in the last 14 days.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={analytics.activitiesByType} layout="vertical" margin={{ left: 20 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" horizontal={false} />
+                  <XAxis type="number" stroke="#8b95a5" fontSize={11} allowDecimals={false} />
+                  <YAxis dataKey="type" type="category" stroke="#8b95a5" fontSize={11} width={110} />
+                  <Tooltip
+                    contentStyle={{ background: "#12161f", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }}
+                    labelStyle={{ color: "#f5f7fa" }}
+                  />
+                  <Bar dataKey="count" fill="#00d4b8" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          <div className="chart-card">
+            <p className="eyebrow">INCIDENTS BY SEVERITY</p>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={analytics.incidentsBySeverity}>
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="severity" stroke="#8b95a5" fontSize={11} />
+                <YAxis stroke="#8b95a5" fontSize={11} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ background: "#12161f", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }}
+                  labelStyle={{ color: "#f5f7fa" }}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                  {analytics.incidentsBySeverity.map((entry) => (
+                    <Bar key={entry.severity} dataKey="count" fill={SEVERITY_COLORS[entry.severity]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+      )}
 
       <section className="dash-grid">
         <Link href="/activities" className="dash-tile">
