@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import AppNav from "@/components/AppNav";
 
 type Incident = {
   id: number;
@@ -109,6 +110,7 @@ export default function IncidentsPage() {
         <div className="blob blob-deep" />
       </div>
 
+      <AppNav />
       <header className="dash-header">
         <div>
           <Link href="/dashboard" className="back-link">

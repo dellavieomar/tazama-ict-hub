@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth, useUser } from "@clerk/nextjs";
+import AppNav from "@/components/AppNav";
 import Link from "next/link";
 import { LogOut, ClipboardList, AlertTriangle, FileBarChart, UserCircle } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -88,14 +89,12 @@ export default function DashboardPage() {
         <div className="blob blob-deep" />
       </div>
 
+      <AppNav showSignOut />
       <header className="dash-header">
         <div>
           <p className="eyebrow">TAZAMA ICT HUB</p>
           <h1 className="dash-title">Welcome back, {user?.firstName ?? "there"}.</h1>
         </div>
-        <button onClick={() => signOut()} className="signout-btn">
-          <LogOut size={16} /> Sign out
-        </button>
       </header>
 
       <section className="stat-strip">

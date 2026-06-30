@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, FileBarChart } from "lucide-react";
+import AppNav from "@/components/AppNav";
 
 type SavedReport = {
   id: number;
@@ -71,6 +72,7 @@ export default function ReportsPage() {
         <div className="blob blob-deep" />
       </div>
 
+      <AppNav />
       <header className="dash-header">
         <div>
           <Link href="/dashboard" className="back-link">

@@ -724,3 +724,45 @@ body {
   .chart-grid { grid-template-columns: 1fr; }
   .chart-grid .chart-card:first-child { grid-column: 1; }
 }
+
+/* === Shared app nav === */
+.app-nav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 8px;
+}
+.nav-logo-link { display: flex; align-items: center; }
+.app-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.app-nav-link {
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.app-nav-link:hover { color: var(--ink); }
+
+@media (max-width: 640px) {
+  .app-nav { padding: 14px 20px; }
+  .app-nav-right { gap: 14px; }
+  .app-nav-link { font-size: 13px; }
+}
+
+/* === Text wordmark (replaces logo image) === */
+.nav-wordmark-link { text-decoration: none; }
+.nav-wordmark {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+}
+.nav-wordmark-dot { color: var(--teal); margin: 0 2px; }
