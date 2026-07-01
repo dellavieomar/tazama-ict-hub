@@ -25,7 +25,7 @@ export async function GET(
   const report = data.content as WeeklyReport;
   const buffer = await generateReportDocx(report);
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "Content-Disposition": `attachment; filename="tazama-report-${report.periodStart}.docx"`,
