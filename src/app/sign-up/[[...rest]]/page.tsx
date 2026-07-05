@@ -49,6 +49,7 @@ export default function SignUpPage() {
               baseTheme: dark,
               variables: {
                 colorPrimary: "#ff6b35",
+                borderRadius: "10px",
               },
               elements: {
                 rootBox: "w-full",
