@@ -49,11 +49,6 @@ export default function SignInPage() {
               baseTheme: dark,
               variables: {
                 colorPrimary: "#00d4b8",
-                colorBackground: "rgba(18,22,31,0.001)",
-                colorText: "#f5f7fa",
-                colorTextSecondary: "#8b95a5",
-                borderRadius: "10px",
-                fontFamily: "var(--font-body)",
               },
               elements: {
                 rootBox: "w-full",
