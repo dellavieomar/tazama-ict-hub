@@ -57,7 +57,9 @@ export default function Home() {
       </div>
 
       <nav className="nav">
-        <Image src="/logo.png" alt="TAZAMA" width={150} height={64} className="nav-logo" priority />
+        <Link href="/" className="nav-wordmark-link">
+          <span className="nav-wordmark">TAZAMA<span className="nav-wordmark-dot">·</span>ICT</span>
+        </Link>
         <Link href="/sign-in" className="nav-link">
           Sign in
         </Link>
