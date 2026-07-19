@@ -1,7 +1,6 @@
 "use client";
 
 import { SignIn } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
 import { useEffect, useState } from "react";
 
 const statusLines = [
@@ -46,7 +45,6 @@ export default function SignInPage() {
             fallbackRedirectUrl="/dashboard"
             signUpUrl="/sign-up"
             appearance={{
-              baseTheme: dark,
               variables: {
                 colorPrimary: "#00d4b8",
                 borderRadius: "10px",
